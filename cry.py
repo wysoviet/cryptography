@@ -198,7 +198,6 @@ def des_en(s, k, rnd=16):
 
 def des_de(s, k, rnd=16):  
     a = ''  
-    #s.lower()  
     for i in range(0, len(s), 16):  
         before = ''.join(__hex_bin[s[j]] for j in range(i, i+16))  
 	after = __code(before, k[0:rnd][::-1], rnd)  
@@ -238,7 +237,10 @@ def crack6(pt, et, check):
 	            m = j
             k += __HB('%2x' % m)[2:8]
 
+    k48 = ''.join(w if w != ' ' else '0' for w in ('%12x' % int(k, 2)))
     k,l = __RK2(k), __k0[5] 
+    k56 = ''.join(w if w != ' ' else '0' for w in ('%14x' % int(k, 2)))
+
     k = __RK1(k[28-l:28]+k[0:28-l]+k[56-l:56]+k[28:56-l])
     for i in range(256):
             x,y = __HB('%2x' % i), list(k)
@@ -248,7 +250,7 @@ def crack6(pt, et, check):
 	    y = ''.join(w if w != ' ' else '0' for w in y)
             key = des_key(y)
             if check == des_en("shit", key) : 
-		    return y
+		    return (k48, k56, y)
 
 def test_gen6(num = 480):
     x = [__HB('%16x' % randint(0, (1<<64)-1)) for  t in range(num)]
@@ -272,32 +274,16 @@ def rsa_de(s, k, f=pow):
     before = '%x' % f(s, k.d, k.n)
     return ''.join(chr(int(before[i:i+2],16)) for i in range(0, len(before), 2)) 
 
-
-#pub, pri = newkeys(512)
-#s = raw_input("str:\n")
-#e = rsa_en(s, pub)
-#print '%x\n%r' % (e , len('%x' % e))
-#print rsa_de(e, pri)
-
-#crk = test_gen3(5)
-###k = des_key("0000000000000000")
-#k = des_key("1a624c89520fec46")
-##print "1a624c89520fec46"
-#print crk 
-#en = [(des_en(x,k,3), des_en(y,k,3)) for (x,y) in crk] 
-#print en
-#print crack3(crk, en)
-
 #k = des_key("1a624c89520fec46")
 #print "1a624c89520fec46"
 #crk = test_gen6(240)
 #en = [[(des_en(x,k,6), des_en(y,k,6)) for (x,y) in z] for z in crk]
 #print crack6(crk, en, des_en("shit",k))
 
-class InputDialog(QtGui.QWidget):
+class mywidget(QtGui.QWidget):
     def __init__(self, parent = None):
         QtGui.QWidget.__init__(self)
-        self.setGeometry(300, 300, 600, 500)
+        self.setGeometry(300, 300, 500, 450)
         self.setWindowTitle(u'密码学课程设计')
 
 	tabs = QtGui.QTabWidget(self)
@@ -338,9 +324,99 @@ class InputDialog(QtGui.QWidget):
         self.connect(en_button, QtCore.SIGNAL('clicked()'), self.endes)  
         self.connect(de_button, QtCore.SIGNAL('clicked()'), self.dedes)  
 
+	#crk ui
 	tabs.addTab(tab_crk, u'DES差分攻击')
 
+	vbox = QtGui.QVBoxLayout()
+	groupbox = QtGui.QGroupBox(u'输入:')
+	hbox = QtGui.QHBoxLayout()
+	hbox.addWidget(QtGui.QLabel(u'输入密钥:'))
+        self.wait_key = QtGui.QLineEdit()
+	hbox.addWidget(self.wait_key)
+	groupbox.setLayout(hbox)
+	vbox.addWidget(groupbox)
+
+	groupbox = QtGui.QGroupBox(u'输出:')
+	v2box = QtGui.QVBoxLayout()
+        self.crk_key48 = QtGui.QLineEdit()
+        self.crk_key56 = QtGui.QLineEdit()
+        self.crk_key64 = QtGui.QLineEdit()
+	hbox = QtGui.QHBoxLayout()
+	hbox.addWidget(QtGui.QLabel(u'48位密钥:'))
+	hbox.addWidget(self.crk_key48)
+	v2box.addLayout(hbox)
+	hbox = QtGui.QHBoxLayout()
+	hbox.addWidget(QtGui.QLabel(u'56位密钥:'))
+	hbox.addWidget(self.crk_key56)
+	v2box.addLayout(hbox)
+	hbox = QtGui.QHBoxLayout()
+	hbox.addWidget(QtGui.QLabel(u'64位密钥:'))
+	hbox.addWidget(self.crk_key64)
+	v2box.addLayout(hbox)
+	groupbox.setLayout(v2box)
+	vbox.addWidget(groupbox)
+	
+	hbox = QtGui.QHBoxLayout()
+	crk_button = QtGui.QPushButton(u'6圈差分攻击') 
+	hbox.addStretch(1)
+	hbox.addWidget(crk_button)
+	hbox.addStretch(1)
+	vbox.addLayout(hbox)
+
+	tab_crk.setLayout(vbox)
+        self.connect(crk_button, QtCore.SIGNAL('clicked()'), self.crk)  
+
+	#rsa ui
 	tabs.addTab(tab_rsa, u'RSA加解密')
+	self.rsa_input = QtGui.QTextEdit()
+	self.rsa_output = QtGui.QTextEdit()
+	self.rsa_pub = QtGui.QLineEdit()
+	self.rsa_pri = QtGui.QLineEdit()
+	self.rsa_n = QtGui.QLineEdit()
+	self.rsa_p = QtGui.QLineEdit()
+	self.rsa_q = QtGui.QLineEdit()
+	rsa_key_button = QtGui.QPushButton(u'生成密钥')
+	rsa_en_button = QtGui.QPushButton(u'加密')
+	rsa_de_button = QtGui.QPushButton(u'解密')
+
+	hbox = QtGui.QHBoxLayout()
+	vbox = QtGui.QVBoxLayout()
+	vbox.addWidget(QtGui.QLabel(u'输入:'))
+	vbox.addWidget(self.rsa_input)
+	vbox.addWidget(QtGui.QLabel(u'输出:'))
+	vbox.addWidget(self.rsa_output)
+	hbox.addLayout(vbox)
+       
+	vbox = QtGui.QVBoxLayout()
+	h2box = QtGui.QHBoxLayout()
+	h2box.addWidget(QtGui.QLabel(u'e:'))
+	h2box.addWidget(self.rsa_pub)
+	vbox.addLayout(h2box)
+	h2box = QtGui.QHBoxLayout()
+	h2box.addWidget(QtGui.QLabel(u'd:'))
+	h2box.addWidget(self.rsa_pri)
+	vbox.addLayout(h2box)
+	h2box = QtGui.QHBoxLayout()
+	h2box.addWidget(QtGui.QLabel(u'n:'))
+	h2box.addWidget(self.rsa_n)
+	vbox.addLayout(h2box)
+	h2box = QtGui.QHBoxLayout()
+	h2box.addWidget(QtGui.QLabel(u'p:'))
+	h2box.addWidget(self.rsa_p)
+	vbox.addLayout(h2box)
+	h2box = QtGui.QHBoxLayout()
+	h2box.addWidget(QtGui.QLabel(u'q:'))
+	h2box.addWidget(self.rsa_q)
+	vbox.addLayout(h2box)
+	vbox.addWidget(rsa_key_button)
+	h2box = QtGui.QHBoxLayout()
+	h2box.addWidget(rsa_en_button)
+	h2box.addWidget(rsa_de_button)
+	vbox.addLayout(h2box)
+	hbox.addLayout(vbox)
+        tab_rsa.setLayout(hbox)
+	
+        self.connect(rsa_key_button, QtCore.SIGNAL('clicked()'), self.rsa_key)  
 
 	vbox = QtGui.QVBoxLayout()
         vbox.addWidget(tabs)
@@ -365,10 +441,28 @@ class InputDialog(QtGui.QWidget):
 	y = des_de(x, key)
 	self.des_output.setText(unicode(y, 'utf-8'))
 
+    def crk(self) :
+        key = self.wait_key.text().toLocal8Bit()
+	key = des_key(key)
+        ck = test_gen6(240)
+	en = [[(des_en(x,key,6), des_en(y,key,6)) for (x,y) in z] for z in ck]
+	k48,k56,k64 = crack6(ck, en, des_en("shit",key))
+	self.crk_key48.setText(unicode(k48))
+	self.crk_key56.setText(unicode(k56))
+	self.crk_key64.setText(unicode(k64))
+    
+    def rsa_key(self):
+	self.pub, self.pri = newkeys(512)
+	self.rsa_pub.setText(unicode(self.pri.e))
+	self.rsa_pri.setText(unicode(self.pri.d))
+	self.rsa_n.setText(unicode(self.pri.n))
+	self.rsa_p.setText(unicode(self.pri.p))
+	self.rsa_q.setText(unicode(self.pri.q))
 
 
+	
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    icon = InputDialog()
-    icon.show()
+    windows = mywidget()
+    windows.show()
     sys.exit(app.exec_())
