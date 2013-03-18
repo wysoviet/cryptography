@@ -229,7 +229,7 @@ def crack6(pt, et, check):
 		if z == so[p][i][k*4:k*4+4]:
 			t = int(ts[p][i][k*6:k*6+6],2)
 			jm[k][j^t] += 1
-		
+
     k,s = '', [43,36,33,9,61,37,28,7]
     for i in range(8):
 	    m = 0
@@ -237,7 +237,7 @@ def crack6(pt, et, check):
 		if jm[i][j] > jm[i][m]:
 	            m = j
             k += __HB('%2x' % m)[2:8]
-	   
+
     k,l = __RK2(k), __k0[5] 
     k = __RK1(k[28-l:28]+k[0:28-l]+k[56-l:56]+k[28:56-l])
     for i in range(256):
@@ -297,7 +297,7 @@ def rsa_de(s, k, f=pow):
 class InputDialog(QtGui.QWidget):
     def __init__(self, parent = None):
         QtGui.QWidget.__init__(self)
-        self.setGeometry(300, 300, 700, 600)
+        self.setGeometry(300, 300, 600, 500)
         self.setWindowTitle(u'密码学课程设计')
 
 	tabs = QtGui.QTabWidget(self)
@@ -339,7 +339,7 @@ class InputDialog(QtGui.QWidget):
         self.connect(de_button, QtCore.SIGNAL('clicked()'), self.dedes)  
 
 	tabs.addTab(tab_crk, u'DES差分攻击')
-	
+
 	tabs.addTab(tab_rsa, u'RSA加解密')
 
 	vbox = QtGui.QVBoxLayout()
