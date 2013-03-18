@@ -432,7 +432,8 @@ class mywidget(QtGui.QWidget):
     def endes(self) :
         key = self.des_key.text().toLocal8Bit()
 	if key_test(key) == 0: 
-            print "shit"
+            QtGui.QMessageBox.warning(self, u"喵~",u"你的密钥弱爆了!")
+	    return 
 	x = self.des_input.toPlainText().toLocal8Bit()
 	key = des_key(key)
 	y = des_en(x, key)
@@ -441,7 +442,8 @@ class mywidget(QtGui.QWidget):
     def dedes(self) :
         key = self.des_key.text().toLocal8Bit()
 	if key_test(key) == 0: 
-            print "shit"
+	    QtGui.QMessageBox.warning(self, u"咩~",u"你的密钥弱爆了!")
+	    return 
 	x = self.des_input.toPlainText().toLocal8Bit()
 	key = des_key(key)
 	y = des_de(x, key)
