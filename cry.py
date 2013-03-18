@@ -267,18 +267,22 @@ def key_test(k):
     return 1
 
 def rsa_en(s, k, f=pow):
-    before = reduce(lambda x,y:x*256+ord(y), s, 0)
-    return f(before, k.e, k.n)
+    a = '' 
+    s += ' ' * ((32-len(s)%32)%32)  
+    for i in range(0, len(s), 32):
+        before = reduce(lambda x,y:x*256+ord(y), s[i:i+32], 0)
+        a += '%128x' % f(before, k.e, k.n)   
+    return ''.join(w if w != ' ' else '0' for w in a)
    
 def rsa_de(s, k, f=pow):
-    before = '%x' % f(s, k.d, k.n)
-    return ''.join(chr(int(before[i:i+2],16)) for i in range(0, len(before), 2)) 
-
-#k = des_key("1a624c89520fec46")
-#print "1a624c89520fec46"
-#crk = test_gen6(240)
-#en = [[(des_en(x,k,6), des_en(y,k,6)) for (x,y) in z] for z in crk]
-#print crack6(crk, en, des_en("shit",k))
+    a = ''
+    s = str(s)
+    for j in range(0, len(s), 128): 
+        t = int(s[j:j+128], 16)	
+        before = '%x' % f(t, k.d, k.n)
+	if len(before) % 2 == 1: before = '0'+before
+        a += ''.join(chr(int(before[i:i+2],16)) for i in range(0, len(before), 2)) 
+    return a.rstrip()
 
 class mywidget(QtGui.QWidget):
     def __init__(self, parent = None):
@@ -417,6 +421,8 @@ class mywidget(QtGui.QWidget):
         tab_rsa.setLayout(hbox)
 	
         self.connect(rsa_key_button, QtCore.SIGNAL('clicked()'), self.rsa_key)  
+        self.connect(rsa_en_button, QtCore.SIGNAL('clicked()'), self.enrsa)  
+        self.connect(rsa_de_button, QtCore.SIGNAL('clicked()'), self.dersa)  
 
 	vbox = QtGui.QVBoxLayout()
         vbox.addWidget(tabs)
@@ -459,7 +465,15 @@ class mywidget(QtGui.QWidget):
 	self.rsa_p.setText(unicode(self.pri.p))
 	self.rsa_q.setText(unicode(self.pri.q))
 
+    def enrsa(self):
+        x = self.rsa_input.toPlainText().toLocal8Bit()
+	y = rsa_en(x, self.pub)	
+	self.rsa_output.setText(unicode(y))
 
+    def dersa(self):
+        x = self.rsa_input.toPlainText().toLocal8Bit()
+	y = rsa_de(x, self.pri)
+	self.rsa_output.setText(unicode(y, 'utf-8'))
 	
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
